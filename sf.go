@@ -1,16 +1,25 @@
 package main
 
 import (
-	"kangqing2008/sf/dm"
+	//"kangqing2008/sf/dm"
 	"fmt"
+	"kangqing2008/gotools/tools/file"
 )
 
 func main() {
 	//dm.GetStockList("sh",1)
-	res := dm.ParseStockList(str)
-	fmt.Println(res.ResCode)
-	for i,stock := range res.ResBody.Stocks{
-		fmt.Println(i,"-",stock.Code,":",stock.Name)
+	//res := dm.ParseStockList(str)
+	//fmt.Println(res.ResCode)
+	//for i,stock := range res.ResBody.Stocks{
+	//	fmt.Println(i,"-",stock.Code,":",stock.Name)
+	//}
+	filename := "E:\\stocks\\hk00001.txt"
+	r,err := file.ReadLine(filename)
+	if err != nil{
+		panic("读取文件:" + filename + " 失败!")
+	}
+	for i,line := range r{
+		fmt.Println("第",i,"行:",line)
 	}
 }
 
