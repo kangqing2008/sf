@@ -2,8 +2,8 @@ package main
 
 import (
 	//"kangqing2008/sf/dm"
+	"kangqing2008/sf/dm"
 	"fmt"
-	"kangqing2008/gotools/tools/file"
 )
 
 func main() {
@@ -13,16 +13,40 @@ func main() {
 	//for i,stock := range res.ResBody.Stocks{
 	//	fmt.Println(i,"-",stock.Code,":",stock.Name)
 	//}
-	filename := "E:\\stocks\\hk00001.txt"
-	r,err := file.ReadLine(filename)
-	if err != nil{
-		panic("读取文件:" + filename + " 失败!")
-	}
-	for i,line := range r{
-		fmt.Println("第",i,"行:",line)
-	}
+	//path := "E:\\stocks\\hk"
+	//r,err := file.ReadLine(filename)
+	//if err != nil{
+	//	panic("读取文件:" + filename + " 失败!")
+	//}
+	//for i,line := range r{
+	//	fmt.Println("第",i,"行:",line)
+	//}
+	//n,s := file.GetFileName(filename)
+	//fmt.Println(n,".",s)
+	//runes := []rune("sh000001")
+	//fmt.Println(string(runes[0:2]),string(runes[2:]))
+	//dm.ImportFile(filename)
+	//dm.ImportDirectory(path)
+
+	//testGetStockSize()
+	dm.Alerm001("sh","600000")
+	//str := []string{"0","1","2","3","4"}
+	//fmt.Println(str[:])
+	//fmt.Println(str[3:5])
+	//fmt.Println(str[0:4])
+	//fmt.Println(str[2:4])
+
 }
 
+
+func testGetStockSize(){
+	fmt.Println("开始统计每只股票的数据量!")
+	markets,codes,sizes := dm.GetStockStat()
+	fmt.Println("统计完毕，开始展示")
+	for i,market := range markets{
+		fmt.Println(market,codes[i],sizes[i])
+	}
+}
 
 const str =`{
     "showapi_res_code": 0,
