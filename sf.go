@@ -29,13 +29,15 @@ func main() {
 	//dm.ImportDirectory(path)
 
 	//testGetStockSize()
-	dm.Alerm001("sh","600000")
+	//dm.Alerm001("sh","600000")
 	//str := []string{"0","1","2","3","4"}
 	//fmt.Println(str[:])
 	//fmt.Println(str[3:5])
 	//fmt.Println(str[0:4])
 	//fmt.Println(str[2:4])
-
+	//dm.CalcDayStat()
+	//dm.UpdateAllStockInfo()
+	dm.CalcDTIDetail("sh","601881")
 }
 
 

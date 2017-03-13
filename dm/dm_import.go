@@ -170,7 +170,13 @@ func GetStockStat()([]string,[]string,[]int64){
 	db := OpenDatabase()
 	defer db.Close()
 	// WHERE CODE = '600000'
-	rows ,err := db.Query(" SELECT MARKET,CODE,COUNT(1) SIZE FROM D GROUP BY MARKET,CODE ORDER BY MARKET DESC,CODE ASC ")
+	//rows ,err := db.Query(" SELECT MARKET,CODE,COUNT(1) SIZE FROM D GROUP BY MARKET,CODE ORDER BY MARKET DESC,CODE ASC ")
+	rows,err := db.Query(`SELECT MARKET, CODE,COUNT(1) SIZE,SUM(CASE WHEN MA5 > 0.001 THEN 1 ELSE 0 END) MA5C
+				FROM D
+				GROUP BY CODE
+				HAVING (SIZE - MA5C) > 5
+				ORDER BY CODE ASC`)
+
 	if err != nil {
 		fmt.Println("统计股票日线数据量的时候出错：",err)
 		panic(err)
@@ -180,11 +186,12 @@ func GetStockStat()([]string,[]string,[]int64){
 	defer rows.Close()
 	for rows.Next(){
 		var market ,code string
-		var size int64
-		err := rows.Scan(&market,&code,&size)
+		var size,ma5c int64
+		err := rows.Scan(&market,&code,&size,&ma5c)
 		if err != nil{
 			fmt.Println(err)
 		}
+		fmt.Println(market,code,size,ma5c)
 		markets = append(markets,market)
 		codes	= append(codes,code)
 		sizes	= append(sizes,size)
