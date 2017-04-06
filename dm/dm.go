@@ -15,7 +15,7 @@ const(
 	STOCK_API_SERVER = "https://ali-stock.showapi.com"
 	STOCK_LIST = STOCK_API_SERVER + "/stocklist"
 
-	DTI_CLOSE	= "close"
+
 )
 
 //Get Stock List Result
@@ -61,6 +61,8 @@ type DTI struct{
 	MACD		float64
 	RSI			float64
 }
+
+
 
 //market 证券交易所:sh 上海  sz 深圳 hk 港交所
 //page   第几页数据
@@ -239,7 +241,7 @@ func CalcDTIDetail(market,code string)[]DTI{
 func CalcKDJ(lines []DLine,dtis []DTI)(float64,float64,float64){
 	cl := lines[len(lines) -1]
 
-	max,min,_ := MaxMinAvg(lines,DTI_CLOSE)
+	max,min,_ := MaxMinAvg(lines,CLOSE)
 
 	rsv := (cl.Close - min)/(max - min) * 100
 
@@ -254,7 +256,7 @@ func CalcKDJ(lines []DLine,dtis []DTI)(float64,float64,float64){
 	k = ti23*PreK(dtis) + ti13*rsv
 	d = ti23*PreD(dtis) + ti13*k
 	j = 3*d -2*k
-	fmt.Println(k,d,j)
+	fmt.Println("k:",k,"d:",d,"j:",j)
 	return k,d,j
 }
 

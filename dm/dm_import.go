@@ -55,6 +55,7 @@ type DLine struct{
 	Ma250		float64
 }
 
+
 // 解析文件并将数据解析后导入数据库
 func ImportFile(filename string)(int64,error){
 
