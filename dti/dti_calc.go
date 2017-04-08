@@ -260,12 +260,12 @@ func (this *DTITools)MACD(SHORT,LONG,MID int){
 
 		eshort := EMA(c,SHORT,pre_eshort)
 		elong  := EMA(c,LONG,pre_elong)
-		dif    := str.RF64(eshort - elong,2)
+		dif    := eshort - elong
 		dea    := EMA(dif,MID,pre_dea)
-		macd   := str.RF64((dif - dea)*2,2)
-		p.DIF  = dif
-		p.DEA  = dea
-		p.MACD = macd
+		macd   := (dif - dea)*2
+		p.DIF  = str.RF64(dif,2)
+		p.DEA  = str.RF64(dea,2)
+		p.MACD = str.RF64(macd,2)
 		p.Set(ESHORT,eshort)
 		p.Set(ELONG,elong)
 		//p.EMA12 = eshort
