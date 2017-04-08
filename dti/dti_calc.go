@@ -1,51 +1,74 @@
 package dti
 
-import "strconv"
+import (
+	"strconv"
+	//"math"
+	"kangqing2008/gotools/tools/str"
+	"math"
+)
 
-type DTITools struct{
-	Data	[]LineData
-	current int
-}
 
-//求X的N日移动平均值
-func (this *DTITools)SetCurrent(crt int){
-	length := len(this.Data)
-	if (crt > (length -1)) || (crt < 0){
-		panic("数组长度为：" + strconv.Itoa(length) +",实际设置位置：" + strconv.Itoa(crt))
-	}
-	this.current = crt
-}
 
 //求X的N日移动平均值
 func (this *DTITools)MA(X string,N int)float64{
 	//其实位置为当前位置-N+1，应为要加上current位置的数据
-	length := len(this.Data)
+	length := this.Length()
 	start := this.current - N + 1
-	end   := this.current
-	if start < 0 || end > length{
-		panic("计算MA时数组越界，length：" + strconv.Itoa(length) + "，current:" + strconv.Itoa(this.current))
+	end   := this.current + 1
+	//如果长度不够，则有多长，算多长.
+	if start < 0{
+		start = 0
 	}
-
+	//如果计算出来的位置超出了数组长度，是不允许的
+	if end > length{
+		panic("数据长度：" + strconv.Itoa(length) + "，当前位置：" + strconv.Itoa(length) + "，截取的数组位置Array[" + strconv.Itoa(start) + ":" + strconv.Itoa(end) + "]")
+	}
 	temp := this.Data[start:end]
 	var sum float64
 	for _,line := range temp{
 		sum += line.Get(X)
 	}
-	return sum/float64(N)
+	return str.RF64(sum/float64(end -start),2)
+}
+
+
+//求X的N日随机未成熟指标
+func (this *DTITools)RSV(N int)float64{
+	c := this.CurrentData().CLOSE
+	h := this.HHV(HIGH,N)
+	l := this.LLV(LOW,N)
+	r := ((c-l)/(h-l))*100
+	//fmt.Println(c,h,l,r)
+	if math.IsNaN(r){
+		return 0
+	}else{
+		return str.RF64(r,2)
+	}
 }
 
 //获得往前Index各周期的数据
-func (this *DTITools)Pre(Index int)LineData{
-	length := len(this.Data)
-	if (length < 1) || (length < (Index + 1)){
-		panic("数据总长度是：" + strconv.Itoa(length) + ",不允许往前偏移：" + strconv.Itoa(Index))
+func (this *DTITools)REF(X string,N int)float64{
+	index := this.current - N
+	if (index < 0) || (index > (this.Length() -1)){
+		panic("数据总长度是：" + strconv.Itoa(this.Length()) + ",不允许引用：" + strconv.Itoa(index))
 	}
-	return this.Data[len(this.Data) - 1 - Index]
+	d := this.Get(index)
+	return d.Get(X)
+}
+
+//获得往前Index各周期的数据
+func (this *DTITools)Move(to int){
+	length := this.Length()
+	moved := this.current + to
+	if (moved < 0) || (length < (moved + 1)){
+		panic("数据总长度是：" + strconv.Itoa(length) + ",当前位置:" + strconv.Itoa(this.current) + ",移动位置：" + strconv.Itoa(to))
+	}
+	this.current = moved
 }
 
 //获得第Index个周期的数据
 func (this *DTITools)Get(Index int)LineData{
-	length := len(this.Data)
+	length := this.Length()
 	if (length <= Index){
 		panic("数据总长度是：" + strconv.Itoa(length) + ",不允许定位到：" + strconv.Itoa(Index))
 	}
@@ -56,7 +79,7 @@ func (this *DTITools)Get(Index int)LineData{
 func (this *DTITools)Last()LineData{
 	length := len(this.Data)
 	if (length < 1){
-		return nil
+		panic("nil")
 	}
 	return this.Data[length - 1]
 }
@@ -69,56 +92,33 @@ func (this *DTITools)EMA(X string,N int)float64{
 
 //EMA的递归实现
 func (this *DTITools)ema_impl(X string,N int,Index int)float64{
-	d := this.Pre(Index)
-	val := d.Get(X)
-	return (2*val+(N-1)*this.ema_impl(X,N,Index+1))/(N+1)
+	//d := this.Pre(Index)
+	//val := d.Get(X)
+	//return (2*val+(N-1)*this.ema_impl(X,N,Index+1))/(N+1)
+	return 1
 }
+
 
 
 //DMA:求X的动态移动平均
-func (this *DTITools)DMA(X string,A float64)float64{
-	return this.dma_impl(X,A,0)
-}
+//func (this *DTITools)DMA(X string,A float64)float64{
+//	return this.dma_impl(X,A,0)
+//}
 
-//DMA函数的递归实现
-func (this *DTITools)dma_impl(X string,A float64,Index int)float64{
-	if (A >= 1) || (A <= 0){
-		panic("DMA函数的A值，必须大于0，而且小于1，实际值是：" + strconv.FormatFloat(A,'f',-1,64))
-	}
-	d := this.Pre(Index)
-	val := d.Get(X)
-	return A*val+(1-A)*this.dma_impl(X,A,Index +1)
-}
+
 
 
 //SMA函数实现,原始实现为:Y=(X*M+Y'*(N-M))/N
-//增加了XD参数，用于代表待计算的指标
-//比如在KDJ中的K值计算中,调用方法为：
-//"KDJ_K" = SMA("RSV",3,1,"KDJ_K")
-func (this *DTITools)SMA(X string,N,M int,XD string)float64{
-	return this.sma_impl(X,N,M,0,XD)
+//增加了PRe参数，代表待计算指标的前一个值
+func SMA(X float64,N,M int,PRE float64)float64{
+	return (X*float64(M)+PRE*float64(N-M))/float64(N)
 }
 
-//如果前一天的目标值已经计算则直接使用，如果没有计算，则全部计算出来
-func (this *DTITools)sma_impl(X string,N,M,Index int,XD string)float64{
-	//先获取到当天的用于计算的值
-	d := this.Pre(Index)
-	val := d.Get(X)
-	//获取前一天的计算目标值
-	xdVal := this.Pre(Index+1).Get(XD)
-	//如果还没有计算，就先计算出来，并且存储进去
-	//如果已经计算就直接执行公式
-	if math.IsNaN(xdVal){
-		xdVal = this.sma_impl(X,N,M,Index+1,XD)
-		this.Pre(Index+1).Set(XD,xdVal)
-	}
-	return (val*M+xdVal*(N-M))/N
-}
 
 //求X的N日移动平均值
-func EMA(X float64,N int,PRE float64)float64{
-	return (2*X+(N-1)*PRE)/(N+1)
-}
+//func EMA(X float64,N int,PRE float64)float64{
+//	return (2*X+(N-1)*PRE)/(N+1)
+//}
 
 
 //求X的N日移动平均值
@@ -128,55 +128,148 @@ func DMA(X float64,A float64,PRE float64)float64{
 
 //SMA函数实现,原始实现为:Y=(X*M+Y'*(N-M))/N
 //增加了PRE参数，用于代表Y'
-func SMA(X float64,N,M int,PRE float64)float64{
-	return (X*M+PRE*(N-M))/N
-}
+//func SMA(X float64,N,M int,PRE float64)float64{
+//	return (X*M+PRE*(N-M))/N
+//}
 
 //计算data数据中N天内X指标的最低值
 func (this *DTITools)LLV(X string,N int) float64 {
 	//从数据中取出最近N天内的数据
-	temp := this.Data[len(this.Data) - N:]
+	start := this.current - N + 1
+	end   := this.current
 	//返回的结果
 	var minValue float64 = 0
-
-	for i,line := range temp{
-		if i == 0{
-			minValue = line.Get(X)
+	if start < 0{
+		start = 0
+	}
+	for i := start;i<=end;i++{
+		d := this.Get(i)
+		value :=  d.Get(X)
+		if i == start{
+			minValue = value
 		}else{
-			if line.Get(X) < minValue{
-				minValue = line.Get(X)
+			if value < minValue{
+				minValue = value
 			}
 		}
 	}
-	return minValue
+	return str.RF64(minValue,2)
 }
 
 
 //计算data数据中N天内X指标的最高值
 func (this *DTITools)HHV(X string,N int)float64{
 	//从数据中取出最近N天内的数据
-	temp := this.Data[len(this.Data) - N:]
+	start := this.current - N + 1
+	end   := this.current
 	//返回的结果
 	var maxValue float64 = 0
 
-	for i,line := range temp{
-		if i == 0{
-			maxValue = line.Get(X)
+	if start < 0{
+		start = 0
+	}
+	for i := start;i<=end;i++{
+		d :=  this.Get(i)
+		value := d.Get(X)
+		if i == start{
+			maxValue = value
 		}else{
-			if line.Get(X) > maxValue{
-				maxValue = line.Get(X)
+			if value > maxValue{
+				maxValue = value
 			}
 		}
 	}
-	return maxValue
+	return str.RF64(maxValue,2)
 }
 
-func (this *DTITools)KDJ(k,d,j float64){
-	length := len(this.Data)
-	for i := length -1; i >= 0; i-- {
+func (this *DTITools)KDJ(N,M1,M2 int){
+	this.Each(func (t *DTITools){
+		//fmt.Println("当前行号:",this.current + 1)
+		p := t.CurrentData()
+		p.RSV = t.RSV(N)
+		p.KDJ_K = kdj_k(p.RSV,M1,t)
+		p.KDJ_D = kdj_d(p.KDJ_K,M2,t)
+		j := str.RF64(3*p.KDJ_K - 2*p.KDJ_D,2)
+		if j < 0 {
+			j = 0
+		}
+		if j > 100{
+			j = 100
+		}
+		p.KDJ_J = j
+	})
+}
 
+
+
+func kdj_k(RSV float64,M1 int,this *DTITools)float64{
+	PRE := float64(50)
+	//如果前一天的指标为0
+	if this.current > 0{
+		PRE = this.REF(KDJ_K,1)
 	}
+	r := str.RF64(SMA(RSV,M1,1,PRE),2)
+	if r < 0 {
+		r = 0
+	}
+	if r > 100 {
+		r = 100
+	}
+	//fmt.Println("k-method,行号：",this.current,RSV,PRE,r)
+	return r
+}
 
+func kdj_d(KDJ_K float64,M2 int,this *DTITools)float64{
+	PRE := float64(50)
+	//如果前一天的指标为0
+	if this.current > 0{
+		PRE = this.REF(KDJ_D,1)
+	}
+	r := str.RF64(SMA(KDJ_K,M2,1,PRE),2)
+	if r < 0 {
+		r = 0
+	}
+	if r > 100 {
+		r = 100
+	}
+	return r
+}
 
-	return this.Last().KDJ_K,this.Last().KDJ_D,this.Last().KDJ_J
+func (this *DTITools)MACD(SHORT,LONG,MID int){
+	ESHORT := "EMA" + strconv.Itoa(SHORT)
+	ELONG  := "EMA" + strconv.Itoa(LONG)
+	this.Each(func (t *DTITools){
+		//fmt.Println("当前行号:",this.current + 1)
+		p := t.CurrentData()
+		c := p.CLOSE
+		pre_eshort := float64(-1)
+		pre_elong  := float64(-1)
+		pre_dea    := float64(0)
+		if this.current == 0 {
+			pre_eshort = c
+			pre_elong  = c
+			pre_dea    = float64(0)
+		}else{
+			pre_eshort = t.REF(ESHORT,1)
+			pre_eshort = t.REF(ELONG,1)
+			pre_dea    = t.REF(DEA,1)
+		}
+		eshort := EMA(c,SHORT,pre_eshort)
+		elong  := EMA(c,LONG,pre_elong)
+		dif    := str.RF64(eshort - elong,2)
+		dea    := EMA(dif,MID,pre_dea)
+		macd   := str.RF64((dif - dea)*2,2)
+		p.DIF  = dif
+		p.DEA  = dea
+		p.MACD = macd
+		p.Set(ESHORT,eshort)
+		p.Set(ELONG,elong)
+
+	})
+}
+
+func EMA(C float64,N int,PRE float64)float64{
+	a := float64(2)/float64(N+1)
+	r := a * (C - PRE) + PRE
+	return str.RF64(r,2)
 }

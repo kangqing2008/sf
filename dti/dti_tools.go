@@ -1,8 +1,9 @@
 package dti
 
 import (
-	"strconv"
+	//"strconv"
 	"math"
+	"strconv"
 )
 
 const(
@@ -24,6 +25,11 @@ const(
 	MACD	= "MACD"
 )
 
+type DTITools struct{
+	Data	[]LineData
+	current int
+}
+
 type LineData struct{
 	Market		string
 	Code		string
@@ -33,7 +39,7 @@ type LineData struct{
 	CLOSE		float64
 	HIGH		float64
 	LOW			float64
-	VOL			int64
+	VOL			float64
 
 	Tno			float64
 	Uad			float64
@@ -59,6 +65,7 @@ type LineData struct{
 	DIF			float64
 	DEA			float64
 	MACD		float64
+	EXTRAS      map[string]float64
 }
 
 func (this *LineData)Get(X string)float64{
@@ -91,12 +98,18 @@ func (this *LineData)Get(X string)float64{
 	}else if X == MACD{
 		return this.MACD
 	}else{
-		panic("不支持的指标参数:" + X)
+		v,ok := this.EXTRAS[X]
+		if ok {
+			return v
+		}else{
+			panic("不支持的指标参数:" + X)
+		}
+
 	}
 }
 
 func NewLineData()LineData{
-	return &LineData{
+	return LineData{
 		Market		: "",
 		Code		: "",
 		Intcode		: -1,
@@ -163,7 +176,60 @@ func (this *LineData)Set(X string,Val float64){
 	}else if X == MACD{
 		this.MACD = Val
 	}else{
-		panic("不支持的指标参数:" + X)
+		this.EXTRAS[X] = Val
+		//panic("不支持的指标参数:" + X)
 	}
 }
 
+
+func NewTools(data []LineData)*DTITools{
+	if(data == nil || len(data) == 0){
+		panic("数据为空，无法创建技术指标计算工具")
+	}
+	tools := DTITools{Data:data,current:len(data) -1}
+	return &tools
+}
+
+func (this *DTITools)GetCurrent()int{
+	return this.current;
+}
+
+func (this *DTITools)CurrentData()*LineData{
+	return &this.Data[this.current];
+}
+
+
+//求X的N日移动平均值
+func (this *DTITools)SetCurrent(crt int){
+	length := len(this.Data)
+	if (crt > (length -1)) || (crt < 0){
+		panic("数组长度为：" + strconv.Itoa(length) +",实际设置位置：" + strconv.Itoa(crt))
+	}
+	this.current = crt
+}
+
+func (this *DTITools)Length()int{
+	return len(this.Data)
+}
+
+//将current设置为0
+//从前往后遍历所有数据
+//执行完成后定位调用前的位置
+func (this *DTITools)Each(run func(dti *DTITools)){
+	temp := this.current
+	for this.current = 0;this.current <this.Length();this.current++{
+		run(this)
+	}
+	this.current = temp
+}
+
+//将current设置为length-1
+//从后往前遍历所有数据
+//执行完成后定位调用前的位置
+func (this *DTITools)REach(run func(dti *DTITools)){
+	temp := this.current
+	for this.current = this.Length()-1;this.current >= 0;this.current--{
+		run(this)
+	}
+	this.current = temp
+}

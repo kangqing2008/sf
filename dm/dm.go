@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"kangqing2008/tools/errors"
+	"kangqing2008/sf/dti"
 	"math"
 )
 
@@ -241,7 +242,7 @@ func CalcDTIDetail(market,code string)[]DTI{
 func CalcKDJ(lines []DLine,dtis []DTI)(float64,float64,float64){
 	cl := lines[len(lines) -1]
 
-	max,min,_ := MaxMinAvg(lines,CLOSE)
+	max,min,_ := MaxMinAvg(lines,dti.CLOSE)
 
 	rsv := (cl.Close - min)/(max - min) * 100
 
@@ -288,7 +289,7 @@ func MaxMinAvg(lines []DLine,ti string)(float64,float64,float64){
 	var sum float64 = 0
 	for i,l := range lines{
 		//如果是使用close指标
-		if ti == DTI_CLOSE{
+		if ti == dti.CLOSE{
 			//第一个值需要初始化
 			if i == 0{
 				max = l.Max

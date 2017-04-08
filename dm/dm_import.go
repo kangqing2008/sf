@@ -9,6 +9,7 @@ import (
 	"time"
 	"strings"
 	"os"
+	"kangqing2008/sf/dti"
 )
 
 const(
@@ -334,6 +335,40 @@ func GetStockDLines(market,code string)([]DLine){
 		line.Open	= open
 		line.Close	= close
 		results = append(results,line)
+	}
+	if rows.Err() != nil {
+		fmt.Println("从数据库提取日线时出错：",err)
+		panic(rows.Err())
+	}
+	return results
+}
+
+func GetStockDayDetails(market,code string)([]dti.LineData){
+	db := OpenDatabase()
+	defer db.Close()
+	rows,err := db.Query(` SELECT MARKET,CODE,INTCODE,DAY,OPEN,CLOSE,MAX,MIN,VOL,
+ 						   TNO,UAD,AIAD,AM,TR,MA5,MA10,MA20,MA30,MA60,MA120,MA250
+ 						   FROM D WHERE CODE = ? ORDER BY DAY ASC `,code)
+	if err != nil {
+		fmt.Println("查询",market,code,"日线数据时出错：",err)
+		panic(err)
+	}
+	defer rows.Close()
+	var results []dti.LineData
+	for rows.Next(){
+		var d dti.LineData = dti.NewLineData()
+		//var open,close ,max,min,uad,aiad,am,tr,ma5,ma10,ma20,ma30,ma60,ma120,ma250 float64
+		//var day time.Time
+		//var intcode,vol,tno int64
+		var day time.Time
+		err = rows.Scan(&d.Market,&d.Code,&d.Intcode,&day,&d.OPEN,&d.CLOSE,&d.HIGH,&d.LOW,&d.VOL,
+			&d.Tno,&d.Uad,&d.Aiad,&d.Am,&d.Tr,&d.Ma5,&d.Ma10,&d.Ma20,&d.Ma30,&d.Ma60,&d.Ma120,&d.Ma250)
+		d.Day = day.Format("2006-01-02")
+		if err != nil{
+			fmt.Println("从数据库提取日线时出错：",err)
+			panic(err)
+		}
+		results = append(results,d)
 	}
 	if rows.Err() != nil {
 		fmt.Println("从数据库提取日线时出错：",err)
