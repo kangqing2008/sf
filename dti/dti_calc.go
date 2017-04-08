@@ -5,6 +5,7 @@ import (
 	//"math"
 	"kangqing2008/gotools/tools/str"
 	"math"
+	"fmt"
 )
 
 
@@ -236,24 +237,27 @@ func kdj_d(KDJ_K float64,M2 int,this *DTITools)float64{
 }
 
 func (this *DTITools)MACD(SHORT,LONG,MID int){
+	//存储数据的Key名称
 	ESHORT := "EMA" + strconv.Itoa(SHORT)
 	ELONG  := "EMA" + strconv.Itoa(LONG)
 	this.Each(func (t *DTITools){
-		//fmt.Println("当前行号:",this.current + 1)
+		fmt.Println("当前行号:",this.current + 1)
 		p := t.CurrentData()
 		c := p.CLOSE
 		pre_eshort := float64(-1)
 		pre_elong  := float64(-1)
 		pre_dea    := float64(0)
-		if this.current == 0 {
+		if t.current == 0 {
 			pre_eshort = c
 			pre_elong  = c
 			pre_dea    = float64(0)
 		}else{
 			pre_eshort = t.REF(ESHORT,1)
-			pre_eshort = t.REF(ELONG,1)
+			pre_elong = t.REF(ELONG,1)
 			pre_dea    = t.REF(DEA,1)
+
 		}
+
 		eshort := EMA(c,SHORT,pre_eshort)
 		elong  := EMA(c,LONG,pre_elong)
 		dif    := str.RF64(eshort - elong,2)
@@ -264,6 +268,10 @@ func (this *DTITools)MACD(SHORT,LONG,MID int){
 		p.MACD = macd
 		p.Set(ESHORT,eshort)
 		p.Set(ELONG,elong)
+		//p.EMA12 = eshort
+		//p.EMA26 = elong
+		//fmt.Println("前一个数据",p.Day,pre_eshort,pre_elong,pre_dea,eshort,elong,dea)
+		//fmt.Println("内部",p.Day,"Close",p.CLOSE,"MA12",p.Get("EMA12"),"MA26",p.Get("EMA26"),"DIF",p.DIF,"DEA",p.DEA,"MACD",p.MACD)
 
 	})
 }

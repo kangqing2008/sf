@@ -8,6 +8,8 @@ import (
 
 func main() {
 	testMACD()
+	//r := dti.EMA12 == ("EMA" + strconv.Itoa(12))
+	//fmt.Println(r)
 }
 
 //测试内存中运行模式，计算MA
@@ -33,12 +35,12 @@ func testKDJ(){
 }
 
 func testMACD(){
-	datas := dm.GetStockDayDetails("sh","002081")
+	datas := dm.GetStockDayDetails("sh","601881")
 	tools := dti.NewTools(datas)
 	tools.MACD(12,26,9)
 	tools.Each(func(this *dti.DTITools){
 		p := this.CurrentData()
-		fmt.Println(p.Day,p.DIF,p.DEA,p.MACD)
+		fmt.Println("外部",p.Day,"MA12",p.Get("EMA12"),"MA26",p.Get("EMA26"),"DIF",p.DIF,"DEA",p.DEA,"MACD",p.MACD)
 	})
 }
 //array := []int{0,1,2,3,4,5,6}
