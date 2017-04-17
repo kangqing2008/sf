@@ -236,6 +236,8 @@ func kdj_d(KDJ_K float64,M2 int,this *DTITools)float64{
 	return r
 }
 
+
+//计算当前数据中所有的MACD指标
 func (this *DTITools)MACD(SHORT,LONG,MID int){
 	//存储数据的Key名称
 	ESHORT := "EMA" + strconv.Itoa(SHORT)
@@ -280,4 +282,49 @@ func EMA(C float64,N int,PRE float64)float64{
 	a := float64(2)/float64(N+1)
 	r := a * (C - PRE) + PRE
 	return str.RF64(r,2)
+}
+
+
+func (this *DTITools)BOLL(M int){
+	this.Each(func(t *DTITools){
+		boll := this.MA(CLOSE,M)
+		ub   := boll + 2*this.STD(CLOSE,M)
+		lb   := boll - 2*this.STD(CLOSE,M)
+		p := t.CurrentData()
+		p.Set(BOLL,boll)
+		p.Set(UB,str.RF64(ub,2))
+		p.Set(LB,str.RF64(lb,2))
+	})
+}
+
+//计算估算标准偏差
+func (this *DTITools)STD(X string,M int)float64{
+	length := M
+	if length > (this.GetCurrent() + 1){
+		length = this.GetCurrent() + 1
+	}
+	ma := this.MA(X,length)
+	count := float64(0)
+	for i:=0;i<length;i++{
+		ref := this.REF(X,i)
+		count += (ref-ma)*(ref-ma)
+	}
+	sqrt := count/float64(length)
+	return math.Sqrt(sqrt)
+}
+
+//计算估算标准偏差
+func (this *DTITools)STDP(X string,M int)float64{
+	length := M
+	if length > (this.GetCurrent() + 1){
+		length = this.GetCurrent() + 1
+	}
+	ma := this.MA(X,length)
+	count := float64(0)
+	for i:=0;i<length;i++{
+		ref := this.REF(X,i)
+		count += (ref-ma)*(ref-ma)
+	}
+	sqrt := count/float64(length-1)
+	return math.Sqrt(sqrt)
 }

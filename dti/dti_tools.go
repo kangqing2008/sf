@@ -23,6 +23,10 @@ const(
 	DIF		= "DIF"
 	DEA		= "DEA"
 	MACD	= "MACD"
+
+	BOLL    = "BOLL"
+	UB      = "UB"
+	LB      = "LB"
 )
 
 type DTITools struct{
@@ -143,7 +147,8 @@ func NewLineData()LineData{
 		EMA26		: math.NaN(),
 		DIF			: math.NaN(),
 		DEA			: math.NaN(),
-		MACD		: math.NaN()}
+		MACD		: math.NaN(),
+		EXTRAS      : make(map[string]float64)}
 }
 
 func (this *LineData)Set(X string,Val float64){

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	testMACD()
+	testBOLL()
 	//r := dti.EMA12 == ("EMA" + strconv.Itoa(12))
 	//fmt.Println(r)
 }
@@ -43,6 +43,18 @@ func testMACD(){
 		fmt.Println("外部",p.Day,"MA12",p.Get("EMA12"),"MA26",p.Get("EMA26"),"DIF",p.DIF,"DEA",p.DEA,"MACD",p.MACD)
 	})
 }
+
+func testBOLL(){
+	datas := dm.GetStockDayDetails("sh","002081")
+	tools := dti.NewTools(datas)
+	tools.BOLL(20)
+	tools.Each(func(this *dti.DTITools){
+		p := this.CurrentData()
+		fmt.Println("外部",p.Day,"BOLL:",p.Get("BOLL"),"UB",p.Get("UB"),"LB",p.Get("LB"))
+	})
+}
+
+
 //array := []int{0,1,2,3,4,5,6}
 //fmt.Println(array[0:7])
 //testMA()
