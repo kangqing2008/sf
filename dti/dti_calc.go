@@ -3,9 +3,9 @@ package dti
 import (
 	"strconv"
 	//"math"
-	"kangqing2008/gotools/tools/str"
 	"math"
 	"fmt"
+	"kangqing2008/gotools/tools/str"
 )
 
 

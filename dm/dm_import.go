@@ -4,12 +4,13 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"strconv"
-	"kangqing2008/gotools/tools/file"
 	"fmt"
 	"time"
 	"strings"
 	"os"
 	"kangqing2008/sf/dti"
+	"kangqing2008/tools/files"
+	"kangqing2008/tools"
 )
 
 const(
@@ -61,9 +62,9 @@ type DLine struct{
 func ImportFile(filename string)(int64,error){
 
 	// 通过解析文件全路径，得到文件名称，股票市场和股票代码
-	name,_ := file.GetFileName(filename)
-	market := file.Substr(name,0,2)
-	code := file.SubstrToEnd(name,2)
+	name,_ := files.GetFileName(filename)
+	market := tools.Substr(name,0,2)
+	code := tools.SubstrToEnd(name,2)
 
 	lines,err := readFileContent(filename)
 	if err != nil{
@@ -78,12 +79,12 @@ func ImportFile(filename string)(int64,error){
 
 func readFileContent(filename string) ([]string,error){
 	// 判断文件是否存在
-	if exists,finfo := file.Exists(filename); !exists || finfo == nil{
+	if exists,finfo := files.Exists(filename); !exists || finfo == nil{
 		panic("文件名不存在:" + filename)
 	}
 
-	// 读取文件内容到内存中，每行一个字符串
-	return file.ReadAllLines(filename)
+	// 读取文内容到内存中，每行一个字符串
+	return files.ReadAllLines(filename)
 }
 
 // 保存日线数据到数据库中
@@ -145,7 +146,7 @@ func parseDLines(market,code string ,lines []string)[]DLine{
 }
 
 func ImportDirectory(path string){
-	files,err := file.ListFiles(path)
+	files,err := files.ListFiles(path)
 	if err != nil{
 		fmt.Println("罗列所有文件时出错：",err)
 		panic(err)
